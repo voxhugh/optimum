@@ -14,7 +14,7 @@ class Solution{
         if(nums[i][j]!=1)	return;
         nums[i][j] = 2;
         
-		dfs(nums,i-1,j);
+	dfs(nums,i-1,j);
         dfs(nums,i+1,j);
         dfs(nums,i,j-1);
         dfs(nums,i,j+1);
@@ -60,10 +60,10 @@ public:
                 {
                     Q.emplace(i,j);
                     time[i][j] = 0;
-				}
+		}
                 else if(nums[i][j]==1)
                     ++org;
-			}
+	    }
         //腐烂
         while(!Q.empty())
         {
@@ -86,9 +86,9 @@ public:
                     --org;
                     ans = time[tx][ty];
                     if(!org)	break;
-				}
-			}
 		}
+	      }
+	}
         return org?-1:ans;    
 	}
 };
@@ -129,9 +129,9 @@ public:
             ans = height[i] < height[j]?
                 max(ans,(j-i)*height[i++]):
             	max(ans,(j-i)*height[j--])
-		}
-        return ans;
 	}
+        return ans;
+     }
 };
 ```
 
@@ -145,15 +145,15 @@ public:
         unordered_map<int,int> mp;
         mp[0] = 1;
         int count = 0, pre = 0;
-        for(auto& x:nums)
+        for(int& x:nums)
         {
             pre += x;
             if(mp.count(pre-k))
                 count += mp[pre-k];
             ++mp[pre];
-		}
-        return count;
 	}
+        return count;
+    }
 };
 ```
 
@@ -178,7 +178,7 @@ class Solution{
             R *= nums[i];
         }
         return ans;
-	}
+    }
 };
 ```
 
@@ -218,7 +218,7 @@ public:
             else	++x;
         }
         return false;
-	}
+    }
 }
 ```
 
@@ -236,7 +236,7 @@ class Solution{
             swap(a[i],a[lg]);
             adjust(a,lg,heapSize);
         }
-	}
+    }
     void crtMaxHeap(vector<int>& a,int heapSize)
     {
         for(int i=heapSize/2;i>=0;--i)
@@ -253,7 +253,7 @@ public:
             adjust(nums,0,--heapSize);
         }
         return nums[0];
-	}
+    }
 };
 ```
 
@@ -276,7 +276,7 @@ public:
                     ++step;
                 }
             }
-		}
+	}
         return step;
     }
 };
@@ -293,13 +293,13 @@ public:
         int n = nums.size();
         if(n == 1)	return nums[0];
         
-        vector<int> dp = vector<int>(size);
+        vector<int> dp(n);
         dp[0] = nums[0];
         dp[1] = max(nums[0],nums[1]);
         for(int i=2;i<n;++i)
             dp[i] = max(dp[i-2] + nums[i], dp[i-1]);
         return dp[size-1];
-	}
+    }
 };
 ```
 
