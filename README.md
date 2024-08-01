@@ -302,4 +302,55 @@ public:
     }
 };
 ```
+## 单词搜索(BT)
 
+```C++
+class Solution{
+	int rows,cols;
+    bool dfs(vector<vector<char>>& board,string word,int i,int j,int k)
+    {
+        if(i>=rows||i<0||j>=cols||j<0||board[i][j]!=word[k])
+            return false;
+        if(k==word.size()-1)	return true;
+        board[i][j] = '\0';
+        bool ans = dfs(borad,word,i+1,j,k+1)||
+            		dfs(borad,word,i-1,j,k+1)||
+            		dfs(borad,word,i,j+1,k+1)||
+            		dfs(board,word,i,j-1,k+1);
+        board[i][j] = word[k];
+        return ans;  
+    }
+public:
+    bool exist(vector<vector<char>>& board,string word)
+    {
+        rows = board.size();
+        cols = board[0].size();
+        for(int i=0;i<rows;++i)
+            	for(int j=0;j<cols;++j)
+                    if(dfs(board,word,i,j,0))
+                        return true;
+        return false;
+    }
+};
+```
+
+## 旋转数组(BinSearch)
+
+```C++
+class Solution{
+public:
+    int search(vector<int>& nums,int k)
+    {
+        int lo = 0,hi = nums.size()-1;
+        while(lo<hi)
+        {
+            int mid = (lo+hi)/2;
+            if((nums[0]>k)^(nums[0]>nums[mid])^(k>nums[mid]))
+                lo = mid+1;
+            else
+                hi = mid;
+        }
+        return lo ==hi && nums[lo]== k?lo:-1;
+    }
+}
+```
