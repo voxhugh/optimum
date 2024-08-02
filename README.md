@@ -336,7 +336,7 @@ public:
 
 ## 旋转数组(BinSearch)
 
-```C++
+```dC++
 class Solution{
 public:
     int search(vector<int>& nums,int k)
@@ -354,3 +354,85 @@ public:
     }
 }
 ```
+
+## IP地址
+
+```C++
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <iomanip> // for std::setw and std::setfill
+using namespace std;
+
+string ip_to_hex(const string& ip) {
+    stringstream ss(ip);
+    string segment;
+    string hex_ip;
+
+    // 将 IP 地址分割为四个部分，并逐个转换为十六进制
+    for (int i = 0; i < 4; ++i) {
+        getline(ss, segment, '.'); // 使用 '.' 分割字符串
+        stringstream converter;
+        converter << hex << uppercase << setw(2) << setfill('0') << stoi(segment);
+        hex_ip += converter.str();
+    }
+    return hex_ip;
+}
+
+int main() {
+    string line;
+    while (getline(cin, line)) {
+        string hex_ip = ip_to_hex(line);
+        cout << hex_ip << endl;
+    }
+    return 0;
+}
+```
+
+## IP地址(C++20)
+
+```c++
+#include <iostream>
+#include <string_view>
+#include <format>
+#include <ranges>
+#include <sstream>
+#include <charconv>
+using namespace std;
+
+// 将 IPv4 地址转换为 8 位十六进制表示的函数
+string ip_to_hex(const string_view& ip) {
+    // 使用 views::split 观察器来按 '.' 分割字符串
+    auto parts = ip | views::split('.');
+
+    string hex_ip; // 存储十六进制 IP 地址的字符串
+    for (auto octet : parts) {
+        // 获取每个八位字节的字符串视图
+        string_view octet_str = octet;
+
+        // from_chars 用于将字符串视图转换为整数
+        // 注意：这里忽略了返回的状态信息，实际使用时应检查转换是否成功
+        size_t idx;
+        int octet_num;
+        from_chars(octet_str.data(), octet_str.data() + octet_str.size(), octet_num);
+
+        // 使用 format 将整数转换为两位的十六进制数
+        // 并附加到 hex_ip 字符串中
+        hex_ip += format("{:02X}", octet_num);
+    }
+
+    return hex_ip;
+}
+
+int main() {
+
+    // 从标准输入读取多行 IP 地址
+    string line;
+    while (getline(cin, line)) {
+        string hex_ip = ip_to_hex(line);
+        cout << hex_ip << endl;
+    }
+    return 0;
+}
+```
+
