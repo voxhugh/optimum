@@ -436,3 +436,18 @@ int main() {
 }
 ```
 
+## 输入流提取数据
+
+```C++
+vector<int> read_() {
+    string line;
+    getline(cin, line);
+    istringstream iss(line);
+    vector<int> v;
+    int a;
+    while (iss >> a)
+        v.emplace_back(a);
+    return v;
+}
+```
+
