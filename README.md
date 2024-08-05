@@ -172,6 +172,76 @@ public:
 };
 ```
 
+## 滑动窗口
+
+### 无重复字符的最长子串
+
+```C++
+class Solution {
+public:
+    int lengthOfLongestSubstring(string s) {
+        unordered_set<char> set;
+        int ans = 0, n = s.size(), j = -1;
+        for (int i = 0; i < n; ++i) {
+            if (i)
+                set.erase(s[i - 1]);
+            while (j + 1 < n && !set.count(s[j + 1])) {
+                set.emplace(s[j + 1]);
+                ++j;
+            }
+            ans = max(ans, j - i + 1);
+        }
+        return ans;
+    }
+};
+```
+
+### 找到字符串中所有字母异位词
+
+```C++
+class Solution {
+public:
+    vector<int> findAnagrams(string s, string p) {
+        int n1 = s.size(), n2 = p.size();
+        if (n1 < n2)
+            return {};
+        vector<int> ans;
+        vector<int> cnt(26);
+        // p,s凹凸计数，建立窗口
+        for (int i = 0; i < n2; ++i) {
+            ++cnt[s[i] - 'a'];
+            --cnt[p[i] - 'a'];
+        }
+        // 记录绝对值总数：1多   0适   -1少
+        int diff = 0;
+        for (int i = 0; i < 26; ++i)
+            if (cnt[i])
+                ++diff;
+        if (!diff)
+            ans.emplace_back(0);
+        // 滑动窗口
+        for (int i = 0; i < n1 - n2; ++i) {
+            // 左边界
+            if (cnt[s[i] - 'a'] == 0)
+                ++diff;
+            else if (cnt[s[i] - 'a'] == 1)
+                --diff;
+            --cnt[s[i] - 'a'];
+            // 右边界
+            if (cnt[s[i + n2] - 'a'] == 0)
+                ++diff;
+            else if (cnt[s[i + n2] - 'a'] == -1)
+                --diff;
+            ++cnt[s[i + n2] - 'a'];
+
+            if (!diff)
+                ans.emplace_back(i + 1);
+        }
+        return ans;
+    }
+};
+```
+
 
 
 
@@ -211,7 +281,7 @@ vector<int> read_() {
             v.emplace_back(a);
         matrix.emplace_back(v);
     }
-    //输入：单行点分十进制时
+    //输入：单行点分十进制
 	string line, hexIP = "";
 	getline(cin, line);
 	istringstream iss(line);
