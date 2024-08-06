@@ -242,6 +242,138 @@ public:
 };
 ```
 
+## 子串
+
+### 和为K的子数组
+
+```C++
+class Solution {
+public:
+    int subarraySum(vector<int>& nums, int k) {
+        int cnt = 0, pre = 0;
+        unordered_map<int, int> mp;
+        mp[0] = 1; //<Sn,f>
+        for (const int& x : nums) {
+            pre += x;
+            if (mp.count(pre - k))
+                cnt += mp[pre - k];
+            ++mp[pre];
+        }
+        return cnt;
+    }
+};
+```
+
+### 滑动窗口最大值
+
+```C++
+class Solution {
+public:
+    vector<int> maxSlidingWindow(vector<int>& nums, int k) {
+        int n = nums.size();
+        deque<int> q;
+        // 创建初始窗口，严格递减队列
+        for (int i = 0; i < k; ++i) {
+            while (!q.empty() && nums[i] >= nums[q.back()])
+                q.pop_back();
+            q.push_back(i);
+        }
+        // 当前队头最大
+        vector<int> ans;
+        ans.emplace_back(nums[q.front()]);
+        // 滑动窗口
+        for (int i = k; i < n; ++i) {
+            while (!q.empty() && nums[i] >= nums[q.back()])
+                q.pop_back();
+            q.push_back(i);
+            // 保证队首有效性
+            while (q.front() <= i - k)
+                q.pop_front();
+            // 队头最大
+            ans.emplace_back(nums[q.front()]);
+        }
+        return ans;
+    }
+};
+```
+
+### 最小覆盖子串
+
+```C++
+class Solution {
+public:
+    string minWindow(string s, string t) {
+        int n = s.size(), cat = 0;
+        int S[58]{}, T[58]{};
+        // 记录t中字符种数
+        for (const char& x : t) {
+            if (!T[x - 'A'])
+                ++cat;
+            ++T[x - 'A'];
+        }
+        // 窗口右扩
+        int L = -1, R = n, i = 0;
+        for (int j = 0; j < n; ++j) {
+            ++S[s[j] - 'A'];
+            if (S[s[j] - 'A'] == T[s[j] - 'A'])
+                --cat;
+            // 窗口左缩
+            while (!cat) {
+                if (j - i < R - L) {
+                    L = i;
+                    R = j;
+                }
+                if (S[s[i] - 'A'] == T[s[i] - 'A'])
+                    ++cat;
+                --S[s[i] - 'A'];
+                ++i;
+            }
+        }
+        return L < 0 ? "" : s.substr(L, R - L + 1);
+    }
+};
+```
+
+## 普通数组
+
+### 最大子数组和
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        int seq = 0, ans = nums[0];
+        for (const int& x : nums) {
+            seq = max(seq + x, x);
+            ans = max(ans, seq);
+        }
+        return ans;
+    }
+};
+```
+
+### 合并区间
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> merge(vector<vector<int>>& intervals) {
+        sort(intervals.begin(), intervals.end());
+
+        vector<vector<int>> ans;
+        int m = intervals.size();
+
+        for (int i = 0; i < m; ++i) {
+            if (ans.empty() || ans.back()[1] < intervals[i][0])
+                ans.push_back({intervals[i][0], intervals[i][1]});
+            else
+                ans.back()[1] = max(ans.back()[1], intervals[i][1]);
+        }
+        return ans;
+    }
+};
+```
+
 
 
 
