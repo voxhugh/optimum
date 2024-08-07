@@ -374,6 +374,163 @@ public:
 };
 ```
 
+### 轮转数组
+
+```C++
+class Solution {
+    void reverse(vector<int>& nums, int i, int j) {
+        while (i < j) {
+            swap(nums[i], nums[j]);
+            ++i;
+            --j;
+        }
+    }
+
+public:
+    void rotate(vector<int>& nums, int k) {
+        k %= nums.size();
+        reverse(nums, 0, nums.size() - 1);
+        reverse(nums, 0, k - 1);
+        reverse(nums, k, nums.size() - 1);
+    }
+};
+```
+
+### 除自身以外数组的乘积
+
+```C++
+class Solution {
+public:
+    vector<int> productExceptSelf(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> v(n, 1);
+        for (int i = 1; i < n; ++i)
+            v[i] = v[i - 1] * nums[i - 1];
+        int pre = nums[n - 1];
+        for (int i = n - 2; i >= 0; --i) {
+            v[i] *= pre;
+            pre *= nums[i];
+        }
+        return v;
+    }
+};
+```
+
+### 缺失的第一个正数
+
+```C++
+class Solution {
+public:
+    int firstMissingPositive(vector<int>& nums) {
+        int n = nums.size();
+        // 对[1,n]中的值恢复其映射
+        for (int i = 0; i < n; ++i) {
+            // 为防止重复元素造成死循环，需要以置换位置的两元素判断而不是判断映射
+            while (nums[i] > 0 && nums[i] <= n && nums[nums[i] - 1] != nums[i])
+                swap(nums[i], nums[nums[i] - 1]);
+        }
+        for (int i = 0; i < n; ++i)
+            if (nums[i] != i + 1)
+                return i + 1;
+        return n + 1;
+    }
+};
+```
+
+## 矩阵
+
+### 矩阵置零
+
+```C++
+class Solution {
+public:
+    void setZeroes(vector<vector<int>>& matrix) {
+        int m = matrix.size(), n = matrix[0].size();
+        bool flag = false;
+        for (int i = 0; i < m; ++i) {
+            if (!matrix[i][0])
+                flag = true;
+            for (int j = 1; j < n; ++j) {
+                if (!matrix[i][j])
+                    matrix[i][0] = matrix[0][j] = 0;
+            }
+        }
+
+        for (int i = m - 1; i >= 0; --i) {
+            for (int j = 1; j < n; ++j) {
+                if (!matrix[i][0] || !matrix[0][j])
+                    matrix[i][j] = 0;
+            }
+            if (flag)
+                matrix[i][0] = 0;
+        }
+    }
+};
+```
+
+### 螺旋矩阵
+
+```C++
+class Solution {
+public:
+    vector<int> spiralOrder(vector<vector<int>>& matrix) {
+        vector<int> ans;
+        int u = 0, d = matrix.size() - 1, l = 0, r = matrix[0].size() - 1;
+        // 当相对的边界发生交错，遍历完毕
+        while (true) 
+        {
+            for (int i = l; i <= r; ++i)    ans.emplace_back(matrix[u][i]);
+            if (++u > d)    break;
+            for (int i = u; i <= d; ++i)    ans.emplace_back(matrix[i][r]);
+            if (--r < l)    break;
+            for (int i = r; i >= l; --i)    ans.emplace_back(matrix[d][i]);
+            if (--d < u)    break;
+            for (int i = d; i >= u; --i)    ans.emplace_back(matrix[i][l]);
+            if (++l > r)    break;
+        }
+        return ans;
+    }
+};
+```
+
+### 旋转图像
+
+```C++
+class Solution {
+public:
+    void rotate(vector<vector<int>>& matrix) {
+        int n = matrix.size();
+        for (int i = 0; i < n / 2; ++i)
+            for (int j = 0; j < n; ++j)
+                swap(matrix[i][j], matrix[n - i - 1][j]);
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < i; ++j)
+                swap(matrix[i][j], matrix[j][i]);
+    }
+};
+```
+
+### 搜索二维矩阵II
+
+```C++
+class Solution {
+public:
+    bool searchMatrix(vector<vector<int>>& matrix, int target) {
+        int m = matrix.size(), n = matrix[0].size();
+        int i = 0, j = n - 1;
+        while (i < m && j >= 0) {
+            if (matrix[i][j] == target)
+                return true;
+            if (matrix[i][j] > target)
+                --j;
+            else
+                ++i;
+        }
+        return false;
+    }
+};
+```
+
 
 
 
