@@ -531,7 +531,146 @@ public:
 };
 ```
 
+## 链表
 
+### 相交链表
+
+```C++
+class Solution {
+public:
+    ListNode* getIntersectionNode(ListNode* headA, ListNode* headB) {
+        ListNode *p = headA, *q = headB;
+        while (p != q) {
+            p = p ? p->next : headB;
+            q = q ? q->next : headA;
+        }
+        return p;
+    }
+};
+```
+
+### 反转链表
+
+```C++
+class Solution {
+public:
+    ListNode* reverseList(ListNode* head) {
+        ListNode *P = nullptr, *C = head;
+        while (C) {
+            ListNode* N = C->next;
+            C->next = P;
+            P = C;
+            C = N;
+        }
+        return P;
+    }
+};
+```
+
+### 回文链表
+
+```C++
+class Solution {
+public:
+    bool isPalindrome(ListNode* head) {   //空间O(1)：快慢指针定位，反转后半段，扫描后恢复
+        vector<int> v;
+        ListNode* p = head;
+        while (p) {
+            v.emplace_back(p->val);
+            p = p->next;
+        }
+        int i = 0, j = v.size() - 1;
+        while (i < j) {
+            if (v[i] != v[j])
+                return false;
+            ++i;
+            --j;
+        }
+        return true;
+    }
+};
+```
+
+### 环形链表
+
+```C++
+class Solution {
+public:
+    ListNode* detectCycle(ListNode* head) {
+        ListNode *p = head, *q = head;
+        while (q) {
+            if (!q->next)   return nullptr;
+            q = q->next->next;
+            p = p->next;
+            if (p == q) {
+                q = head;
+                while (p != q) {
+                    q = q->next;
+                    p = p->next;
+                }
+                return p;
+            }
+        }
+        return nullptr;
+    }
+};
+```
+
+### 合并两个有序链表
+
+```C++
+class Solution {
+public:
+    ListNode* mergeTwoLists(ListNode* L, ListNode* R) {
+        if (!L || !R)   return L ? L : R;
+
+        ListNode *dummy = new ListNode(-1), *p = dummy;
+        while (L && R) {
+            if (L->val <= R->val) {
+                p->next = L;
+                L = L->next;
+            } else {
+                p->next = R;
+                R = R->next;
+            }
+            p = p->next;
+        }
+        p->next = L ? L : R;
+
+        p = dummy->next;delete dummy;
+        return p;
+    }
+};
+```
+
+### 两数相加
+
+```C++
+class Solution {
+public:
+    ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+        ListNode *H = nullptr, *T = nullptr;
+        bool carry = false;
+        while (l1 || l2) {
+            int n1 = l1 ? l1->val : 0;
+            int n2 = l2 ? l2->val : 0;
+            int sum = n1 + n2 + carry;
+
+            if (!H) {
+                H = T = new ListNode(sum % 10);
+            } else {
+                T->next = new ListNode(sum % 10);
+                T = T->next;
+            }
+            carry = sum >= 10;
+            if (l1) l1 = l1->next;
+            if (l2) l2 = l2->next;
+        }
+        if (carry)  T->next = new ListNode(1, nullptr);  
+        return H;
+    }
+};
+```
 
 
 
