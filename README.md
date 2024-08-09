@@ -672,6 +672,202 @@ public:
 };
 ```
 
+### 删除链表的倒数第N个结点
+
+```C++
+class Solution {
+public:
+    ListNode* removeNthFromEnd(ListNode* head, int n) {
+        ListNode* dummy = new ListNode(-1, head);
+        ListNode *p = dummy, *q = head;
+        for (int i = 0; i < n; ++i)
+            q = q->next;
+        while (q) {
+            q = q->next;
+            p = p->next;
+        }
+        p->next = p->next->next;
+
+        q = dummy->next;delete dummy;
+        return q;
+    }
+};
+```
+
+### 两两交换链表中的结点
+
+```C++
+class Solution {
+public:
+    ListNode* swapPairs(ListNode* head) {
+        ListNode* dummy = new ListNode(-1, head);
+        ListNode* current = dummy;
+        while (current->next && current->next->next) {
+            ListNode* p = current->next;
+            ListNode* q = current->next->next;
+            p->next = q->next;
+            q->next = p;
+            current->next = q;
+            current = p;
+        }
+
+        current = dummy->next;delete dummy;
+        return current;
+    }
+};
+```
+
+### K个一组反转链表
+
+```C++
+class Solution {
+    // 翻转链表：反转指针，逆序返回
+    pair<ListNode*, ListNode*> RVS(ListNode* head, ListNode* tail) {
+        ListNode *P = nullptr, *C = head;
+        tail = tail->next;
+        while (C != tail) {
+            ListNode* N = C->next;
+            C->next = P;
+            P = C;
+            C = N;
+        }
+        return {P, head};
+    }
+
+public:
+    ListNode* reverseKGroup(ListNode* head, int k) {
+        ListNode* dummy = new ListNode(-1, head);
+        ListNode* pre = dummy;
+
+        while (head) {
+            ListNode* tail = pre;
+            for (int i = 0; i < k; ++i) {
+                tail = tail->next;
+                if (!tail) {
+                    pre = dummy->next;delete dummy;
+                    return pre;
+                }
+            }
+            ListNode* tailNext = tail->next;
+            tie(head, tail) = RVS(head, tail);
+            // 连接前链
+            pre->next = head;
+            tail->next = tailNext;
+            pre = tail;
+            head = tail->next;
+        }
+
+        pre = dummy->next;delete dummy;
+        return pre;
+    }
+};
+```
+
+### 随机链表的复制
+
+```C++
+class Solution {
+public:
+    Node* copyRandomList(Node* head) {
+        if (!head)  return nullptr;
+        // 添加后继A'
+        for (Node* N = head; N; N = N->next->next) {
+            Node* A = new Node(N->val);
+            A->next = N->next;
+            N->next = A;
+        }
+        // 完善随机指针
+        for (Node* N = head; N; N = N->next->next) {
+            Node* R = N->random ? N->random->next : nullptr;
+            N->next->random = R;
+        }
+        // 串联A'
+        Node* p = head->next;
+        for (Node* N = head; N; N = N->next) {
+            Node* q = N->next;
+            N->next = N->next->next;
+            q->next = N->next ? N->next->next : nullptr;
+        }
+
+        return p;
+    }
+};
+```
+
+### 排序链表
+
+```C++
+class Solution {
+    ListNode* merge(ListNode* L, ListNode* R) {
+        if (!L || !R)
+            return L ? L : R;
+
+        ListNode *dummy = new ListNode(-1), *p = dummy;
+        while (L && R) {
+            if (L->val <= R->val) {
+                p->next = L;
+                L = L->next;
+            } else {
+                p->next = R;
+                R = R->next;
+            }
+            p = p->next;
+        }
+        p->next = L ? L : R;
+
+        p = dummy->next;
+        delete dummy;
+        return p;
+    }
+
+public:
+    // 自底向上的归并排序
+    ListNode* sortList(ListNode* head) {
+        if (!head)  return nullptr;
+        ListNode* dummy = new ListNode(-1, head);
+        int len = 0;
+        // 计算链表长度
+        while (head) {
+            ++len;
+            head = head->next;
+        }
+        // 维护子链大小
+        for (int sublen = 1; sublen < len; sublen <<= 1) {
+            ListNode *pre = dummy, *p = dummy->next;
+            // 归并若干个子链
+            while (p) {
+                // 划分第一个子链
+                ListNode* H1 = p;
+                for (int i = 1; i < sublen && p->next; ++i)
+                    p = p->next;
+                ListNode* pNext = p->next;
+                p->next = nullptr;
+                p = pNext;
+                // 划分第二个子链
+                ListNode* H2 = p;
+                for (int i = 1; i < sublen && p && p->next; ++i)
+                    p = p->next;
+                pNext = nullptr;
+                if (p) {
+                    pNext = p->next;
+                    p->next = nullptr;
+                }
+                // 归并两条链，串入总链
+                pre->next = merge(H1, H2);
+                while (pre->next) {
+                    pre = pre->next;
+                }
+                p = pNext;
+            }
+        }
+        head = dummy->next;delete dummy;
+        return head;
+    }
+};
+```
+
+
+
 
 
 ## 其他
