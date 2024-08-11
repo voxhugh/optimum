@@ -866,6 +866,293 @@ public:
 };
 ```
 
+### 合并K个升序链表
+
+```C++
+class Solution {
+    ListNode* merge2(ListNode* L, ListNode* R) {
+        if (!L || !R)   return L ? L : R;
+        ListNode *dummy = new ListNode(-1), *p = dummy;
+        while (L && R) {
+            if (L->val <= R->val) {
+                p->next = L;
+                L = L->next;
+            } else {
+                p->next = R;
+                R = R->next;
+            }
+            p = p->next;
+        }
+        p->next = L ? L : R;
+        p = dummy->next;delete dummy;
+        return p;
+    }
+    ListNode* merge(vector<ListNode*>& lists, int l, int r) {
+        if (l == r) return lists[l];
+        if (l > r)  return nullptr;
+        int mid = (l + r) >> 1;
+        return merge2(merge(lists, l, mid), merge(lists, mid + 1, r));
+    }
+
+public:
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+        return merge(lists, 0, lists.size() - 1);
+    }
+};
+```
+
+### LRU缓存
+
+```C++
+struct DlinkList {
+    int key;
+    int val;
+    DlinkList* next;
+    DlinkList* pre;
+    DlinkList() : key(0), val(0), next(nullptr), pre(nullptr){};
+    DlinkList(int k, int v) : key(k), val(v), next(nullptr), pre(nullptr) {}
+};
+
+class LRUCache {
+private:
+    unordered_map<int, DlinkList*> Cache;
+    DlinkList* head;
+    DlinkList* tail;
+    int size;
+    int capacity;
+
+public:
+    LRUCache(int cp) : size(0), capacity(cp) {
+        head = new DlinkList();
+        tail = new DlinkList();
+        head->next = tail;
+        tail->pre = head;
+    }
+
+    int get(int key) {
+        if (Cache.count(key)) {
+            DlinkList* node = Cache[key];
+            moveToHead(node);
+            return node->val;
+        }
+        return -1;
+    }
+
+    void put(int key, int value) {
+        if (Cache.count(key)) {
+            DlinkList* node = Cache[key];
+            node->val = value;
+            moveToHead(node);
+        } else {
+            DlinkList* node = new DlinkList(key, value);
+            addToHead(node);
+            Cache[key] = node;
+            ++size;
+            if (size > capacity) {
+                int k = removeTail();
+                Cache.erase(k);
+                --size;
+            }
+        }
+    }
+
+    void addToHead(DlinkList* node) {
+        node->next = head->next;
+        node->pre = head;
+        head->next->pre = node;
+        head->next = node;
+    }
+
+    void removeNode(DlinkList* node) {
+        node->pre->next = node->next;
+        node->next->pre = node->pre;
+    }
+    // 移至头部
+    void moveToHead(DlinkList* node) {
+        removeNode(node);
+        addToHead(node);
+    }
+    // 移除尾部
+    int removeTail() {
+        DlinkList* node = tail->pre;
+        tail->pre = node->pre;
+        node->pre->next = tail;
+        int k = node->key;
+        delete node;
+        return k;
+    }
+};
+```
+
+## 二叉树
+
+### 二叉树的中序遍历
+
+```C++
+class Solution {
+public:
+    vector<int> inorderTraversal(TreeNode* root) {
+        vector<int> v;
+        TreeNode* pre;
+        while (root) {
+            if (root->left) {
+                pre = root->left;
+                while (pre->right && pre->right != root) {
+                    pre = pre->right;
+                }
+                // 线索化
+                if (!pre->right) {
+                    pre->right = root;
+                    root = root->left;
+                } else { // 去线索化
+                    pre->right = nullptr;
+                    v.emplace_back(root->val);
+                    root = root->right;
+                }
+            } else {
+                v.emplace_back(root->val);
+                root = root->right;
+            }
+        }
+        return v;
+    }
+};
+```
+
+### 二叉树的最大深度
+
+```C++
+class Solution {
+public:
+    int maxDepth(TreeNode* root) {
+        return root ? max(maxDepth(root->left), maxDepth(root->right)) + 1 : 0;
+    }
+};
+```
+
+### 反转二叉树
+
+```C++
+class Solution {
+    void dfs(TreeNode* root) {
+        if (!root)  return;
+        swap(root->left, root->right);
+        dfs(root->right);
+        dfs(root->left);
+    }
+
+public:
+    TreeNode* invertTree(TreeNode* root) {
+        dfs(root);
+        return root;
+    }
+};
+```
+
+### 对称二叉树
+
+```C++
+class Solution {
+    bool dfs(TreeNode* p, TreeNode* q) {
+        if (!p && !q)   return true;
+        if (!p || !q)   return false;
+        return p->val == q->val && dfs(p->left, q->right) && dfs(p->right, q->left);
+    }
+
+public:
+    bool isSymmetric(TreeNode* root) { return dfs(root, root); }
+};
+```
+
+### 二叉树的直径
+
+```C++
+class Solution {
+    int maxEdge = 0;
+    int dfs(TreeNode* root) {
+        if (!root)  return 0;
+        int L = dfs(root->left);
+        int R = dfs(root->right);
+        maxEdge = max(maxEdge, L + R);
+        return max(L, R) + 1;
+    }
+
+public:
+    int diameterOfBinaryTree(TreeNode* root) {
+        dfs(root);
+        return maxEdge;
+    }
+};
+```
+
+### 二叉树的层序遍历
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> levelOrder(TreeNode* root) {
+        vector<vector<int>> ans;
+        if (!root)  return ans;
+        queue<TreeNode*> q;
+        q.emplace(root);
+        while (!q.empty()) {
+            int size = q.size();
+            TreeNode* node;
+            vector<int> v;
+            while (size) {
+                node = q.front();
+                v.emplace_back(node->val);
+                if (node->left)
+                    q.emplace(node->left);
+                if (node->right)
+                    q.emplace(node->right);
+                q.pop();
+                --size;
+            }
+            ans.emplace_back(v);
+        }
+        return ans;
+    }
+};
+```
+
+### 将有序数组转化为二叉查找树
+
+```C++
+class Solution {
+    TreeNode* bst(vector<int>& nums, int L, int R) {
+        if (L > R)  return nullptr;
+        int mid = (L + R) / 2;
+        TreeNode* node = new TreeNode(nums[mid]);
+        node->left = bst(nums, L, mid - 1);
+        node->right = bst(nums, mid + 1, R);
+        return node;
+    }
+
+public:
+    TreeNode* sortedArrayToBST(vector<int>& nums) {
+        return bst(nums, 0, nums.size() - 1);
+    }
+};
+```
+
+### 验证二叉查找树
+
+```C++
+class Solution {
+    bool bst(TreeNode* r, long long L, long long R) {
+        if (!r)
+            return true;
+        if (r->val <= L || r->val >= R)
+            return false;
+        return bst(r->left, L, r->val) && bst(r->right, r->val, R);
+    }
+    // Windows下需要用LLONG_MIN,LLONG_MAX
+public:
+    bool isValidBST(TreeNode* root) { return bst(root, LONG_MIN, LONG_MAX); }
+};
+```
+
 
 
 
