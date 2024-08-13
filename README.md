@@ -1153,6 +1153,278 @@ public:
 };
 ```
 
+### 二叉查找树中第K小的元素
+
+```C++
+class Solution {
+    int value, key;
+    void inOrder(TreeNode* root) {
+        if (!root)      return;
+        inOrder(root->left);
+        if (--key == 0)     value = root->val;
+        inOrder(root->right);
+    }
+
+public:
+    int kthSmallest(TreeNode* root, int k) {
+        key = k;
+        inOrder(root);
+        return value;
+    }
+};
+```
+
+### 二叉树的右视图
+
+```C++
+class Solution {
+public:
+    vector<int> rightSideView(TreeNode* root) {
+        unordered_map<int, int> mp;
+        int maxDep = -1;
+
+        stack<TreeNode*> sNode;
+        stack<int> sDep;
+        sNode.push(root);
+        sDep.push(0);
+
+        while (!sNode.empty()) {
+            TreeNode* node = sNode.top();sNode.pop();
+            int depth = sDep.top();sDep.pop();
+
+            if (node) {
+                maxDep = max(maxDep, depth);
+                if (!mp.count(depth))
+                    mp[depth] = node->val;
+
+                sNode.push(node->left);
+                sNode.push(node->right);
+                sDep.push(depth + 1);
+                sDep.push(depth + 1);
+            }
+        }
+
+        vector<int> R;
+        for (int i = 0; i <= maxDep; ++i)
+            R.emplace_back(mp[i]);
+        return R;
+    }
+};
+```
+
+### 二叉树展开为链表
+
+```C++
+class Solution {
+public:
+    void flatten(TreeNode* root) {
+        TreeNode* p = root;
+        while (p) {
+            if (p->left) {
+                // 找到前驱
+                TreeNode* pre = p->left;
+                while (pre->right)
+                    pre = pre->right;
+                // 根——>左——>右
+                pre->right = p->right;
+                p->right = p->left;
+                p->left = nullptr;
+            }
+            p = p->right;
+        }
+    }
+};
+```
+
+### 从先序与中序序列构造二叉树
+
+```C++
+class Solution {
+    unordered_map<int, int> inId;
+    TreeNode* DFS(const vector<int>& preorder, const vector<int>& inorder, int preL, int preR, int inL, int inR) {
+        if (preL > preR)
+            return nullptr;
+        int preRoot = preL;
+        int inRoot = inId[preorder[preRoot]];
+
+        TreeNode* root = new TreeNode(preorder[preRoot]);
+        int len_L = inRoot - inL;
+        root->left = DFS(preorder, inorder, preL + 1, preL + len_L, inL, inRoot - 1);
+        root->right = DFS(preorder, inorder, preL + len_L + 1, preR, inRoot + 1, inR);
+        return root;
+    }
+
+public:
+    TreeNode* buildTree(vector<int>& preorder, vector<int>& inorder) {
+        int n = inorder.size();
+        for (int i = 0; i < n; ++i)
+            inId[inorder[i]] = i;
+        return DFS(preorder, inorder, 0, n - 1, 0, n - 1);
+    }
+};
+```
+
+### 路径总和III
+
+```C++
+class Solution {
+    unordered_map<long long, int> mp;
+    int dfs(TreeNode* root, long long pre, int k) {
+        if (!root)  return 0;
+
+        int ctn = 0;
+        pre += root->val;
+        if (mp.count(pre - k))
+            ctn = mp[pre - k];
+
+        ++mp[pre];
+        ctn += dfs(root->left, pre, k);
+        ctn += dfs(root->right, pre, k);
+        --mp[pre];
+        
+        return ctn;
+    }
+
+public:
+    int pathSum(TreeNode* root, int targetSum) {
+        mp[0] = 1;
+        return dfs(root, 0, targetSum);
+    }
+};
+```
+
+### 二叉树的最近公共祖先
+
+```C++
+class Solution {
+    TreeNode* ans;
+    bool dfs(TreeNode* root, TreeNode* p, TreeNode* q) {
+        if (!root)      return false;
+        bool L = dfs(root->left, p, q);
+        bool R = dfs(root->right, p, q);
+        if (L && R || ((root->val == p->val || root->val == q->val) && (L || R)))
+            ans = root;
+        return L || R || root->val == p->val || root->val == q->val;
+    }
+
+public:
+    TreeNode* lowestCommonAncestor(TreeNode* root, TreeNode* p, TreeNode* q) {
+        dfs(root, p, q);
+        return ans;
+    }
+};
+```
+
+### 二叉树中的最大路径和
+
+```C++
+class Solution {
+    int maxSum = INT_MIN;
+    int subMax(TreeNode* root) {
+        if (!root)      return 0;
+        int L = max(subMax(root->left), 0);
+        int R = max(subMax(root->right), 0);
+        int sum = root->val + L + R;
+        maxSum = max(maxSum, sum);
+        return root->val + max(L, R);
+    }
+
+public:
+    int maxPathSum(TreeNode* root) {
+        subMax(root);
+        return maxSum;
+    }
+};
+```
+
+## 图论
+
+### 岛屿数量
+
+```C++
+class Solution {
+    bool inside(vector<vector<char>>& grid, int i, int j) {
+        return i >= 0 && i < grid.size() && j >= 0 && j < grid[0].size();
+    }
+    void DFS(vector<vector<char>>& grid, int i, int j) {
+        if (!inside(grid, i, j) || grid[i][j] != '1')       return;
+        grid[i][j] = '2';
+        //上下左右
+        DFS(grid, i - 1, j);
+        DFS(grid, i + 1, j);
+        DFS(grid, i, j - 1);
+        DFS(grid, i, j + 1);
+    }
+
+public:
+    int numIslands(vector<vector<char>>& grid) {
+        int m = grid.size(), n = grid[0].size();
+        int cnt = 0;
+
+        for (int i = 0; i < m; ++i)
+            for (int j = 0; j < n; ++j)
+                if (grid[i][j] == '1') {
+                    DFS(grid, i, j);
+                    ++cnt;
+                }
+        return cnt;
+    }
+};
+```
+
+### 烂橘子
+
+```C++
+class Solution {
+    int org;
+    int rot[10][10];
+    int X[4] = {-1, 1, 0, 0};
+    int Y[4] = {0, 0, -1, 1};
+
+public:
+    int orangesRotting(vector<vector<int>>& grid) {
+
+        queue<pair<int, int>> Q;
+        memset(rot, -1, sizeof(rot));
+        int m = grid.size(), n = grid[0].size(), minu = 0;
+        org = 0;
+        // 初始化烂橘子
+        for (int i = 0; i < m; ++i)
+            for (int j = 0; j < n; ++j) {
+                if (grid[i][j] == 2) {
+                    Q.emplace(i, j);
+                    rot[i][j] = 0;
+                } else if (grid[i][j] == 1)
+                    ++org;
+            }
+
+        while (!Q.empty()) {
+            auto [r, c] = Q.front();Q.pop();
+
+            for (int i = 0; i < 4; ++i) {
+                int dx = r + X[i];
+                int dy = c + Y[i];
+                // 越界，空格，烂橘子
+                if (dx < 0 || dx >= m || dy < 0 || dy >= n ||
+                    rot[dx][dy] != -1 || !grid[dx][dy])
+                    continue;
+                // 入队
+                Q.emplace(dx, dy);
+                // 时间推移
+                rot[dx][dy] = rot[r][c] + 1;
+
+                minu = rot[dx][dy];
+                --org;
+                if (!org)   break;
+            }
+        }
+        return org ? -1 : minu;
+    }
+};
+```
+
+
+
 
 
 
