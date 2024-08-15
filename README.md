@@ -1,11 +1,16 @@
 <center>
-    	<h1>笔试框架</h1>
+    	<h1>算法精选</h1>
 </center>
+
 
 
 [TOC]
 
+[哈希](#哈希)&emsp;&emsp;&emsp;&emsp;&emsp;[双指针](#双指针)&emsp;&emsp;&emsp;&emsp;&emsp;[滑动窗口](#滑动窗口)&emsp;&emsp;&emsp;&emsp;&emsp;[子串](#子串)&emsp;&emsp;&emsp;&emsp;&emsp;[普通数组](#普通数组)&emsp;&emsp;&emsp;&emsp;&emsp;[矩阵](#矩阵)
 
+[链表](#链表)&emsp;&emsp;&emsp;&emsp;&emsp;[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
+
+------
 
 ## 哈希
 
@@ -1419,6 +1424,309 @@ public:
             }
         }
         return org ? -1 : minu;
+    }
+};
+```
+
+### 课程表
+
+```C++
+class Solution {
+    bool valid = true;
+    vector<int> visited;
+    vector<vector<int>> arc;
+
+    void dfs(int u) {
+        // 搜索中
+        visited[u] = 1;
+        for (const int& v : arc[u]) {
+            if (!visited[v]) {
+                dfs(v);
+                if (!valid) return;
+            } else if (visited[v] == 1) {
+                valid = false;
+                return;
+            }
+        }
+        // 已完成
+        visited[u] = 2;
+    }
+
+public:
+    bool canFinish(int numCourses, vector<vector<int>>& prerequisites) {
+        arc.resize(numCourses);
+        //未搜索
+        visited.resize(numCourses);
+        //邻接表
+        for (const auto& x : prerequisites) {
+            arc[x[1]].emplace_back(x[0]);
+        }
+        for (int i = 0; i < numCourses && valid; ++i) {
+            if (!visited[i])
+                dfs(i);
+        }
+        return valid;
+    }
+};
+```
+
+### 实现 Trie（前缀树）
+
+```C++
+class Trie { // 26叉树
+    bool isEnd;
+    vector<Trie*> child;
+
+    Trie* searchWd(string word) {
+        Trie* node = this;
+        for (char x : word) {
+            x -= 'a';
+            if (!node->child[x])
+                return nullptr;
+            node = node->child[x];
+        }
+        return node;
+    }
+
+public:
+    Trie() : isEnd(false), child(26) {}
+    // 插入串
+    void insert(string word) {
+        Trie* node = this;
+        for (char x : word) {
+            x -= 'a';
+            if (!node->child[x])
+                node->child[x] = new Trie();
+            node = node->child[x];
+        }
+        node->isEnd = true;
+    }
+    // 查找串
+    bool search(string word) {
+        Trie* node = searchWd(word);
+        return node && node->isEnd;
+    }
+    // 查找子串
+    bool startsWith(string prefix) { return searchWd(prefix); }
+};
+```
+
+## 回溯
+
+### 全排列
+
+```C++
+class Solution {
+    void backtrack(vector<vector<int>>& nums, vector<int>& v, int pre, int end) {
+        // 递归到底了，装填
+        if (pre == end) {
+            nums.emplace_back(v);
+            return;
+        }
+        for (int i = pre; i < end; ++i) {
+            // pre之前的序列表示已填
+            swap(v[pre], v[i]);
+            backtrack(nums, v, pre + 1, end);
+            swap(v[pre], v[i]);
+        }
+    }
+
+public:
+    vector<vector<int>> permute(vector<int>& nums) {
+        vector<vector<int>> v;
+        backtrack(v, nums, 0, nums.size());
+        return v;
+    }
+};
+```
+
+### 子集
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> subsets(vector<int>& nums) {
+        int n = nums.size();
+        vector<vector<int>> ans;
+        // n个元素，代表n位，2^n种状态
+        for (int i = 0; i < 1 << n; ++i) {
+            vector<int> v;
+            for (int j = 0; j < n; ++j) {
+                // 与到说明此位对应元素
+                if (i & 1 << j)
+                    v.emplace_back(nums[j]);
+            }
+            ans.emplace_back(v);
+        }
+        return ans;
+    }
+};
+```
+
+### 电话号码的字母组合
+
+```C++
+class Solution {
+    unordered_map<char, string> dic{{'2', "abc"}, {'3', "def"}, {'4', "ghi"},
+                                    {'5', "jkl"}, {'6', "mno"}, {'7', "pqrs"},
+                                    {'8', "tuv"}, {'9', "wxyz"}};
+    void backtrack(vector<string>& wd, string& word, string& str, int bg,
+                   int len) {
+        if (bg == len) {
+            wd.emplace_back(str);
+            return;
+        }
+        for (const char& x : dic[word[bg]]) {
+            str.push_back(x);
+            backtrack(wd, word, str, bg + 1, len);
+            str.pop_back();
+        }
+    }
+
+public:
+    vector<string> letterCombinations(string digits) {
+        if (digits.empty())     return {};
+        string str;
+        vector<string> wd;
+        backtrack(wd, digits, str, 0, digits.size());
+        return wd;
+    }
+};
+```
+
+### 组合总和
+
+```C++
+class Solution {
+    void backtrack(vector<vector<int>>& subsets, vector<int>& candi,
+                   vector<int>& v, int target, int start) {
+        if (!target) {
+            subsets.emplace_back(v);
+            return;
+        }
+        int n = candi.size();
+        // 剪枝：升序规避重复子集
+        for (int i = start; i < n; ++i) {
+            if (target < candi[i])
+                return;
+            // 尝试当前
+            v.emplace_back(candi[i]);
+            backtrack(subsets, candi, v, target - candi[i], i);
+            v.pop_back();
+        }
+    }
+
+public:
+    vector<vector<int>> combinationSum(vector<int>& candidates, int target) {
+        vector<vector<int>> subsets;
+        vector<int> v;
+        sort(candidates.begin(), candidates.end());
+        backtrack(subsets, candidates, v, target, 0);
+        return subsets;
+    }
+};
+```
+
+### 括号生成
+
+```C++
+class Solution {
+    void backtrack(vector<string>& v, string& str, int open, int close, int n) {
+        if (str.size() == 2 * n) {
+            v.emplace_back(str);
+            return;
+        }
+        // 先放左括号
+        if (open < n) {
+            str.push_back('(');
+            backtrack(v, str, open + 1, close, n);
+            str.pop_back();
+        }
+        // 能放右括号
+        if (close < open) {
+            str.push_back(')');
+            backtrack(v, str, open, close + 1, n);
+            str.pop_back();
+        }
+    }
+
+public:
+    vector<string> generateParenthesis(int n) {
+        vector<string> v;
+        string str;
+        backtrack(v, str, 0, 0, n);
+        return v;
+    }
+};
+```
+
+### 单词搜索
+
+```C++
+class Solution {
+    bool dfs(vector<vector<char>>& board, string word, int k, int i, int j,
+             int m, int n) {
+        if (k == word.size()) {
+            return true;
+        }
+        if (i < 0 || i >= m || j < 0 || j >= n || word[k] != board[i][j])
+            return false;
+        board[i][j] = '\0';
+        bool ret = dfs(board, word, k + 1, i - 1, j, m, n) ||
+                   dfs(board, word, k + 1, i + 1, j, m, n) ||
+                   dfs(board, word, k + 1, i, j - 1, m, n) ||
+                   dfs(board, word, k + 1, i, j + 1, m, n);
+        board[i][j] = word[k];
+
+        return ret;
+    }
+
+public:
+    bool exist(vector<vector<char>>& board, string word) {
+        int m = board.size(), n = board[0].size();
+        for (int i = 0; i < m; ++i)
+            for (int j = 0; j < n; ++j)
+                if (dfs(board, word, 0, i, j, m, n))
+                    return true;
+        return false;
+    }
+};
+```
+
+### 分割回文串
+
+```C++
+class Solution {
+    void backtrack(vector<vector<string>>& ret, vector<vector<bool>>& dp,
+                   vector<string>& v, const string& s, int start, int n) {
+        if (start == n) {
+            ret.emplace_back(v);
+            return;
+        }
+
+        for (int i = start; i < n; ++i) {
+            // 如果是回文
+            if (dp[start][i]) {
+                v.emplace_back(s.substr(start, i - start + 1));
+                backtrack(ret, dp, v, s, i + 1, n);
+                v.pop_back();
+            }
+        }
+    }
+
+public:
+    vector<vector<string>> partition(string s) {
+        int n = s.size();
+        vector<string> v;
+        vector<vector<string>> ret;
+        vector<vector<bool>> dp(n, vector<bool>(n, true));
+
+        for (int i = n; i >= 0; --i)
+            for (int j = i + 1; j < n; ++j)
+                dp[i][j] = (s[i] == s[j]) && dp[i + 1][j - 1];
+
+        backtrack(ret, dp, v, s, 0, n);
+        return ret;
     }
 };
 ```
