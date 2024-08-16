@@ -1972,6 +1972,66 @@ public:
 };
 ```
 
+### 字符串解码
+
+```C++
+class Solution {
+    // 读取数字
+    string getDigit(const string& s, size_t& ptr) {
+        string str;
+        while (isdigit(s[ptr]))
+            str.push_back(s[ptr++]);
+        return str;
+    }
+    // 提取并合并为单个字符串
+    string combineString(vector<string>& s) {
+        string str;
+        for (const auto& x : s)
+            str += x;
+        return str;
+    }
+
+public:
+    string decodeString(string s) {
+        vector<string> stk;
+        size_t ptr;
+        while (ptr < s.size()) {
+            char ch = s[ptr];
+            // 数字  字母    左括号
+            if (isdigit(ch)) {
+                string str = getDigit(s, ptr);
+                stk.emplace_back(str);
+            } else if (isalpha(ch) || ch == '[') {
+                stk.emplace_back(string(1, ch));
+                ++ptr;
+            } else {
+                ++ptr;
+                vector<string> temp;
+                while (stk.back() != "[") {
+                    temp.emplace_back(stk.back());
+                    stk.pop_back();
+                }
+                // 弹出'['
+                stk.pop_back();
+                // 反转
+                reverse(temp.begin(), temp.end());
+                // 提取
+                string str1, str2 = combineString(temp);
+                // 弹出数字
+                int f = stoi(stk.back());
+                stk.pop_back();
+                // 构造串
+                while (f--)
+                    str1 += str2;
+
+                stk.emplace_back(str1);
+            }
+        }
+        return combineString(stk);
+    }
+};
+```
+
 
 
 
