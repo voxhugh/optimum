@@ -8,7 +8,7 @@
 
 [哈希](#哈希)&emsp;&emsp;&emsp;&emsp;&emsp;[双指针](#双指针)&emsp;&emsp;&emsp;&emsp;&emsp;[滑动窗口](#滑动窗口)&emsp;&emsp;&emsp;&emsp;&emsp;[子串](#子串)&emsp;&emsp;&emsp;&emsp;&emsp;[普通数组](#普通数组)&emsp;&emsp;&emsp;&emsp;&emsp;[矩阵](#矩阵)
 
-[链表](#链表)&emsp;&emsp;&emsp;&emsp;&emsp;[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
+[链表](#链表)&emsp;&emsp;&emsp;&emsp;&emsp;[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;[栈](#栈)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
 
 ------
 
@@ -1731,7 +1731,246 @@ public:
 };
 ```
 
+### N皇后
 
+```C++
+class Solution {
+    vector<string> generateQ(const vector<int>& Q, int n) {
+        vector<string> v;
+        // Q表征每行中皇后出现的列索引
+        for (int i = 0; i < n; ++i) {
+            string str(n, '.');
+            str[Q[i]] = 'Q';
+            v.emplace_back(str);
+        }
+        return v;
+    }
+
+    void backtrack(vector<vector<string>>& ans, vector<int>& Q,
+                   unordered_set<int>& cols, unordered_set<int>& diag1,
+                   unordered_set<int>& diag2, int row, int n) {
+        // 已满，装填
+        if (row == n) {
+            vector<string> str = generateQ(Q, n);
+            ans.emplace_back(str);
+            return;
+        }
+        // 扫描当前行的每列
+        for (int i = 0; i < n; ++i) {
+            if (cols.count(i))
+                continue;
+            // 正斜线：行 - 列
+            int d1 = row - i;
+            if (diag1.count(d1))
+                continue;
+            // 反斜线：行 + 列
+            int d2 = row + i;
+            if (diag2.count(d2))
+                continue;
+
+            Q[row] = i;
+            cols.emplace(i);
+            diag1.emplace(d1);
+            diag2.emplace(d2);
+            backtrack(ans, Q, cols, diag1, diag2, row + 1, n);
+            Q[row] = -1;
+            cols.erase(i);
+            diag1.erase(d1);
+            diag2.erase(d2);
+        }
+    }
+
+public:
+    vector<vector<string>> solveNQueens(int n) {
+        vector<int> Q(n, -1);
+        vector<vector<string>> ans;
+        unordered_set<int> cols;
+        unordered_set<int> diag1;
+        unordered_set<int> diag2;
+        backtrack(ans, Q, cols, diag1, diag2, 0, n);
+        return ans;
+    }
+};
+```
+
+## 二分查找
+
+### 搜索插入位置
+
+```C++
+class Solution {
+public:
+    int searchInsert(vector<int>& nums, int target) {
+        int lo = 0, hi = nums.size() - 1;
+        while (lo <= hi) {
+            int mid = (lo + hi) / 2;
+            if (nums[mid] == target)
+                return mid;
+            else if (nums[mid] < target)
+                lo = mid + 1;
+            else
+                hi = mid - 1;
+        }
+        return lo;
+    }
+};
+```
+
+### 在排序数组中查找元素的第一个和最后一个位置
+
+```C++
+class Solution {
+public:
+    vector<int> searchRange(vector<int>& nums, int target) {
+        auto bg = lower_bound(nums.begin(), nums.end(), target);
+        auto ed = upper_bound(nums.begin(), nums.end(), target);
+        if (bg == nums.end() || *bg != target)      return {-1, -1};
+        return {(int)(bg - nums.begin()), (int)(ed - nums.begin()) - 1};
+    }
+};
+```
+
+### 搜索旋转排序数组
+
+```C++
+class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        int lo = 0, hi = nums.size() - 1;
+        // 相遇即找到
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            // [0,x,mid] [0,x,rota,mid] [0,rota,x,mid]向前规约，否则向后
+            if (nums[mid] < nums[0] ^ target <= nums[mid] ^ target >= nums[0])
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        return nums[lo] == target ? lo : -1;
+    }
+};
+```
+
+### 寻找旋转排序数组中的最小值
+
+```C++
+class Solution {
+public:
+    int findMin(vector<int>& nums) {
+        int lo = 0, hi = nums.size() - 1;
+        while (lo < hi) {
+            int mid = (lo + hi) / 2;
+            // 对比中点和尾部，判断规约方向
+            if (nums[mid] > nums[hi])
+                lo = mid + 1;
+            else
+                hi = mid;
+        }
+        return nums[lo];
+    }
+};
+```
+
+### 寻找两个正序数组的中位数
+
+```C++
+class Solution {
+    int getKth(vector<int>& nums1, vector<int>& nums2, int k) {
+        int m = nums1.size(), n = nums2.size();
+        int idx1 = 0, idx2 = 0;
+        while (true) {
+            // 边界
+            if (idx1 == m)
+                return nums2[idx2 + k - 1];
+            if (idx2 == n)
+                return nums1[idx1 + k - 1];
+            if (k == 1)
+                return min(nums1[idx1], nums2[idx2]);
+
+            // 新下标，每次右滑k/2-1，不能越界
+            int _idx1 = min(idx1 + k / 2 - 1, m - 1);
+            int _idx2 = min(idx2 + k / 2 - 1, n - 1);
+            // 淘汰idx-_idx+1个元素
+            if (nums1[_idx1] <= nums2[_idx2]) {
+                k -= _idx1 - idx1 + 1;
+                idx1 = _idx1 + 1;
+            } else {
+                k -= _idx2 - idx2 + 1;
+                idx2 = _idx2 + 1;
+            }
+        }
+    }
+
+public:
+    double findMedianSortedArrays(vector<int>& nums1, vector<int>& nums2) {
+        int len = nums1.size() + nums2.size();
+        if (len % 2)
+            return getKth(nums1, nums2, len / 2 + 1);
+        else
+            return (getKth(nums1,nums2,len/2)+getKth(nums1,nums2,len/2+1)) / 2.0;
+    }
+};
+```
+
+## 栈
+
+### 有效的括号
+
+```C++
+class Solution {
+public:
+    bool isValid(string s) {
+        if (s.size() % 2)
+            return false;
+        stack<int> stk;
+        for (const char& x : s) {
+            switch (x) {
+            case '(':
+            case '[':
+            case '{':
+                stk.emplace(x);
+                continue;
+            }
+
+            if (stk.empty())
+                return false;
+            char t = stk.top();
+            if (t == '(' && x == ')' || t == '[' && x == ']' ||
+                t == '{' && x == '}')
+                stk.pop();
+            else
+                return false;
+        }
+        return stk.empty() ? true : false;
+    }
+};
+```
+
+### 最小栈
+
+```C++
+class MinStack {
+    stack<int> stk;
+    stack<int> min_stk;
+
+public:
+    MinStack() { min_stk.emplace(INT_MAX); }
+
+    void push(int val) {
+        stk.emplace(val);
+        min_stk.emplace(min(min_stk.top(), val));
+    }
+
+    void pop() {
+        stk.pop();
+        min_stk.pop();
+    }
+
+    int top() { return stk.top(); }
+
+    int getMin() { return min_stk.top(); }
+};
+```
 
 
 
