@@ -6,9 +6,9 @@
 
 [TOC]
 
-[哈希](#哈希)&emsp;&emsp;&emsp;&emsp;&emsp;[双指针](#双指针)&emsp;&emsp;&emsp;&emsp;&emsp;[滑动窗口](#滑动窗口)&emsp;&emsp;&emsp;&emsp;&emsp;[子串](#子串)&emsp;&emsp;&emsp;&emsp;&emsp;[普通数组](#普通数组)&emsp;&emsp;&emsp;&emsp;&emsp;[矩阵](#矩阵)
+[哈希](#哈希)&emsp;&emsp;&emsp;&emsp;&emsp;[双指针](#双指针)&emsp;&emsp;&emsp;&emsp;&emsp;[滑动窗口](#滑动窗口)&emsp;&emsp;&emsp;&emsp;&emsp;[子串](#子串)&emsp;&emsp;&emsp;&emsp;&emsp;[数组](#数组)&emsp;&emsp;&emsp;&emsp;&emsp;[矩阵](#矩阵)&emsp;&emsp;&emsp;&emsp;&emsp;[链表](#链表)
 
-[链表](#链表)&emsp;&emsp;&emsp;&emsp;&emsp;[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;[栈](#栈)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
+[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[栈](#栈)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[堆](#堆)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[贪心](#贪心)&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
 
 ------
 
@@ -339,7 +339,7 @@ public:
 };
 ```
 
-## 普通数组
+## 数组
 
 ### 最大子数组和
 
@@ -2032,6 +2032,250 @@ public:
 };
 ```
 
+### 每日温度
+
+```C++
+class Solution {
+public:
+    vector<int> dailyTemperatures(vector<int>& temperatures) {
+        int n = temperatures.size();
+        vector<int> predict(n);
+        stack<int> stk;
+        for (int i = 0; i < n; ++i) {
+            // 温度严格递增则入栈
+            while (!stk.empty() && temperatures[i] > temperatures[stk.top()]) {
+                int preId = stk.top();
+                predict[preId] = i - preId;
+                stk.pop();
+            }
+            stk.emplace(i);
+        }
+        return predict;
+    }
+};
+```
+
+### 柱状图中最大的矩形
+
+```C++
+class Solution {
+public:
+    int largestRectangleArea(vector<int>& heights) {
+        // 添加边界
+        heights.insert(heights.begin(), 0);
+        heights.emplace_back(0);
+
+        int n = heights.size(), maxS = 0;
+        // 单调递增栈
+        stack<int> stk;
+        // 枚举高度
+        for (int i = 0; i < n; ++i) {
+            // 计算山顶宽度
+            while (!stk.empty() && heights[stk.top()] > heights[i]) {
+                int cur = stk.top();
+                stk.pop();
+                //(左边界,右边界)
+                int L = stk.top() + 1;
+                int R = i - 1;
+                maxS = max(maxS, (R - L + 1) * heights[cur]);
+            }
+            stk.emplace(i);
+        }
+        return maxS;
+    }
+};
+```
+
+## 堆
+
+### 数组中的第K个最大元素 
+
+```C++
+class Solution {
+    void adjust(vector<int>& nums, int i, int n) {
+        int L = 2 * i + 1, R = 2 * i + 2, k = i;
+        if (L < n && nums[L] > nums[k])     k = L;
+        if (R < n && nums[R] > nums[k])     k = R;
+        if (k != i) {
+            swap(nums[i], nums[k]);
+            adjust(nums, k, n);
+        }
+    }
+    void buildHeap(vector<int>& nums, int n) {
+        for (int i = n / 2 - 1; i >= 0; --i)
+            adjust(nums, i, n);
+    }
+
+public:
+    int findKthLargest(vector<int>& nums, int k) {
+        int n = nums.size();
+        buildHeap(nums, n);
+
+        for (int i = n - 1; i >= nums.size() - k + 1; --i) {
+            swap(nums[i], nums[0]);
+            adjust(nums, 0, --n);
+        }
+        return nums[0];
+    }
+};
+```
+
+### 前K个高频元素
+
+```C++
+class Solution {
+    // 比较器
+    static bool cmp(pair<int, int>& p, pair<int, int>& q) {
+        return p.second > q.second;
+    }
+
+public:
+    vector<int> topKFrequent(vector<int>& nums, int k) {
+        // 用哈希映射记录频度
+        unordered_map<int, int> mp;
+        for (const int& x : nums)
+            ++mp[x];
+        // 优先队列
+        priority_queue<pair<int, int>, vector<pair<int, int>>, decltype(&cmp)>
+            q(cmp);
+
+        for (const auto& [x, count] : mp) {
+            // 堆满，比较堆顶
+            if (q.size() == k) {
+                if (q.top().second < count) {
+                    q.pop();
+                    q.emplace(x, count);
+                }
+            } else {
+                q.emplace(x, count);
+            }
+        }
+
+        vector<int> v;
+        while (!q.empty()) {
+            v.emplace_back(q.top().first);
+            q.pop();
+        }
+        return v;
+    }
+};
+```
+
+### 数据流中的中位数
+
+```C++
+class MedianFinder {
+    priority_queue<int, vector<int>, less<int>> queL; // 中位数左区间
+    priority_queue<int, vector<int>, greater<int>> queR;    // 中位数右区间
+public:
+    MedianFinder() {}
+
+    void addNum(int num) {
+        if (queL.empty() || num <= queL.top()) {
+            queL.emplace(num);
+            if (queR.size() + 1 < queL.size()) {
+                queR.emplace(queL.top());
+                queL.pop();
+            }
+        } else {
+            queR.emplace(num);
+            if (queR.size() > queL.size()) {
+                queL.emplace(queR.top());
+                queR.pop();
+            }
+        }
+    }
+
+    double findMedian() {
+        if (queL.size() > queR.size())
+            return queL.top();
+        return (queL.top() + queR.top()) / 2.0;
+    }
+};
+```
+
+## 贪心
+
+### 买卖股票
+
+```C++
+class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        int low = prices[0], profits = 0;
+        for (const int& x : prices) {
+            profits = max(profits, x - low);
+            low = min(low, x);
+        }
+        return profits;
+    }
+};
+```
+
+### 跳跃游戏
+
+```C++
+class Solution {
+public:
+    bool canJump(vector<int>& nums) {
+        int n = nums.size(), ed = 0;
+        for (int i = 0; i < n; ++i) {
+            if (i <= ed) {
+                ed = max(ed, i + nums[i]);
+                if (i == n - 1)     return true;
+            }
+        }
+        return false;
+    }
+};
+```
+
+### 跳跃游戏II
+
+```C++
+class Solution {
+public:
+    int jump(vector<int>& nums) {
+        int n = nums.size(), far = 0, ed = 0, step = 0;
+        for (int i = 0; i < n - 1; ++i) {
+            far = max(far, i + nums[i]);
+            if (i == ed) {
+                ++step;
+                ed = far;
+            }
+        }
+        return step;
+    }
+};
+```
+
+### 划分字母区间
+
+```C++
+class Solution {
+public:
+    vector<int> partitionLabels(string s) {
+        int last[26];
+        int n = s.size(), bg = 0, ed = 0;
+        // 记录每个字符出现的最后位置
+        for (int i = 0; i < n; ++i)
+            last[s[i] - 'a'] = i;
+
+        vector<int> v;
+        for (int i = 0; i < n; ++i) {
+            ed = max(ed, last[s[i] - 'a']);
+            if (i == ed) {
+                v.emplace_back(ed - bg + 1);
+                bg = ed + 1;
+            }
+        }
+        return v;
+    }
+};
+```
+
+
+
 
 
 
@@ -2085,5 +2329,99 @@ vector<int> read_() {
 	}
 	hexIP = oss.str();
 }
+```
+
+### 只出现一次的数字
+
+```C++
+class Solution {
+public:
+    int singleNumber(vector<int>& nums) {
+        int elem = 0;
+        for (const int& x : nums)
+            elem ^= x;
+        return elem;
+    }
+};
+```
+
+### 多数元素
+
+```C++
+class Solution {
+public:
+    int majorityElement(vector<int>& nums) {
+        int votes = 0, x = 0;
+        for (const int& t : nums) {
+            // 正负抵消，下一个默认众数
+            if (votes == 0)     x = t;
+            votes += t == x ? 1 : -1;
+        }
+        return x;
+    }
+};
+```
+
+### 颜色分类
+
+```C++
+class Solution {
+public:
+    void sortColors(vector<int>& nums) {
+        int p0 = 0, p2 = nums.size() - 1;
+        // 双指针
+        for (int i = 0; i <= p2; ++i) {
+            // 保证当前元素扫描到位
+            while (i <= p2 && nums[i] == 2)
+                swap(nums[i], nums[p2--]);
+            if (nums[i] == 0)
+                swap(nums[i], nums[p0++]);
+        }
+    }
+};
+```
+
+### 下一个排列
+
+```C++
+class Solution {
+public:
+    void nextPermutation(vector<int>& nums) {
+        int i = nums.size() - 2;
+        // 找到首个升序邻居[i,i+1]
+        while (i >= 0 && nums[i] >= nums[i + 1])
+            --i;
+        // 找到首个大于i且最靠右的j，交换
+        if (i >= 0) {
+            int j = nums.size() - 1;
+            while (nums[j] <= nums[i])      --j;
+            swap(nums[i], nums[j]);
+        }
+        // 逆置[i+1,n)
+        reverse(nums.begin() + i + 1, nums.end());
+    }
+};
+```
+
+### 寻找重复数
+
+```C++
+class Solution {
+public:
+    int findDuplicate(vector<int>& nums) {
+        int p = 0, q = 0;
+        // 对数组建图，龟兔赛跑算法，索引跳转次数决定快慢
+        do {
+            p = nums[p];
+            q = nums[nums[q]];
+        } while (p != q);
+        p = 0;
+        while (p != q) {
+            p = nums[p];
+            q = nums[q];
+        }
+        return p;
+    }
+};
 ```
 
