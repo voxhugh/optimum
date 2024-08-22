@@ -8,7 +8,7 @@
 
 [哈希](#哈希)&emsp;&emsp;&emsp;&emsp;&emsp;[双指针](#双指针)&emsp;&emsp;&emsp;&emsp;&emsp;[滑动窗口](#滑动窗口)&emsp;&emsp;&emsp;&emsp;&emsp;[子串](#子串)&emsp;&emsp;&emsp;&emsp;&emsp;[数组](#数组)&emsp;&emsp;&emsp;&emsp;&emsp;[矩阵](#矩阵)&emsp;&emsp;&emsp;&emsp;&emsp;[链表](#链表)
 
-[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[栈](#栈)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[堆](#堆)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[贪心](#贪心)&emsp;&emsp;&emsp;&emsp;&emsp;[其他](#其他)
+[二叉树](#二叉树)&emsp;&emsp;&emsp;&emsp;[图论](#图论)&emsp;&emsp;&emsp;&emsp;&emsp;&emsp;[回溯](#回溯)&emsp;&emsp;&emsp;&emsp;&emsp;[栈](#栈)&emsp;&emsp;&emsp;&emsp;[堆](#堆)&emsp;&emsp;&emsp;&emsp;[贪心](#贪心)&emsp;&emsp;&emsp;&emsp;[动态规划](#动态规划)&emsp;&emsp;&emsp;[其他](#其他)
 
 ------
 
@@ -2270,6 +2270,147 @@ public:
             }
         }
         return v;
+    }
+};
+```
+
+## 动态规划
+
+### 爬楼梯
+
+```C++
+class Solution {
+public:
+    int climbStairs(int n) {
+        // f(0) = 1, f(1) = 1
+        int p = 0, q = 0, r = 1;
+        // 滚动数组
+        for (int i = 1; i <= n; ++i) {
+            p = q;
+            q = r;
+            r = p + q;
+        }
+        return r;
+    }
+};
+```
+
+### 杨辉三角
+
+```C++
+class Solution {
+public:
+    vector<vector<int>> generate(int numRows) {
+        vector<vector<int>> ans(numRows);
+        for (int i = 0; i < numRows; ++i) {
+            ans[i].resize(i + 1);
+            ans[i][0] = ans[i][i] = 1;
+            for (int j = 1; j < i; ++j)
+                ans[i][j] = ans[i - 1][j - 1] + ans[i - 1][j];
+        }
+        return ans;
+    }
+};
+```
+
+### 打家劫舍
+
+```C++
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        int n = nums.size();
+        if (n == 1)     return nums[0];
+        // dp[i] = max(dp[i-1],dp[i-2]+nums[i])
+        int p = nums[0], q = max(nums[0], nums[1]);
+        for (int i = 2; i < n; ++i) {
+            int temp = q;
+            q = max(p + nums[i], q);
+            p = temp;
+        }
+        return q;
+    }
+};
+```
+
+### 零钱兑换
+
+```C++
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        int n = coins.size();
+        vector<int> F(amount + 1, amount + 1);
+        // 对依次增大的总金额枚举每种硬币面额，构建硬币方案 F(i) = F(i-cj) + 1
+        F[0] = 0;
+        for (int i = 1; i <= amount; ++i)
+            for (int j = 0; j < n; ++j)
+                if (i >= coins[j])
+                    F[i] = min(F[i], F[i - coins[j]] + 1);
+        return F[amount] > amount ? -1 : F[amount];
+    }
+};
+```
+
+### 完全平方数
+
+```C++
+class Solution {
+public:
+    int numSquares(int n) {
+        vector<int> F(n + 1);
+        for (int i = 1; i <= n; ++i) {
+            int least = n;
+            for (int j = 1; j * j <= i; ++j)
+                least = min(least, F[i - j * j]);
+            F[i] = least + 1;
+        }
+        return F[n];
+    }
+};
+```
+
+### 单词拆分
+
+```C++
+class Solution {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        unordered_set<string> dic;
+        for (const string& x : wordDict)
+            dic.emplace(x);
+
+        int n = s.size();
+        vector<bool> dp(n + 1);
+        dp[0] = true;
+        // F(i) = F(j)&&check(j...i-1)
+        for (int i = 1; i <= n; ++i) {
+            for (int j = 0; j < i; ++j)
+                if (dp[j] && dic.count(s.substr(j, i - j))) {
+                    dp[i] = true;
+                    break;
+                }
+        }
+        return dp[n];
+    }
+};
+```
+
+### 最长递增子序列
+
+```C++
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        int n = nums.size();
+        vector<int> F(n, 1);
+
+        // F(i) = F(j)+1;
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < i; ++j)
+                if (nums[j] < nums[i])
+                    F[i] = max(F[i], F[j] + 1);
+        return *max_element(F.begin(), F.end());
     }
 };
 ```
