@@ -2415,11 +2415,99 @@ public:
 };
 ```
 
+### 乘积最大子数组
 
+```C++
 
+class Solution {
+public:
+    int maxProduct(vector<int>& nums) {
+        int minF = nums[0], maxF = nums[0], ans = nums[0], n = nums.size();
+        // F(i) = max(mx*nums[i],mn*nums[i],nums[i])
+        for (int i = 1; i < n; ++i) {
+            int mx = maxF;
+            int mn = minF;
+            maxF = max(mx * nums[i], max(nums[i], mn * nums[i]));
+            minF = min(mn * nums[i], min(nums[i], mx * nums[i]));
+            ans = max(ans, maxF);
+        }
+        return ans;
+    }
+};
+```
 
+### 分割等和子集
 
+```C++
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) {
 
+        int n = nums.size();
+        if (n < 2)      return false;
+
+        int sum = 0, mx = nums[0], target = 0;
+        for (const int& x : nums) {
+            sum += x;
+            mx = max(mx, x);
+        }
+        target = sum / 2;
+        if (sum & 1 || target < mx)
+            return false;
+        // dp[i,j]表示前i个元素中是否存在若干个之和等于j
+        vector<int> dp(target + 1);
+        dp[0] = true;
+        for (int i = 0; i < n; ++i) {
+            int num = nums[i];
+            for (int j = target; j >= num; --j) {
+                dp[j] |= dp[j - num];
+            }
+        }
+        return dp[target];
+    }
+};
+```
+
+### 最长有效括号
+
+```C++
+class Solution {
+public:
+    int longestValidParentheses(string s) {
+        int n = s.size(), left = 0, right = 0, ans = 0;
+        // 从左到右
+        for (int i = 0; i < n; ++i) {
+            switch (s[i]) {
+            case '(':
+                ++left;
+                break;
+            case ')':
+                ++right;
+            }
+            if (left == right)
+                ans = max(ans, right * 2);
+            else if (right > left)
+                right = left = 0;
+        }
+        right = left = 0;
+        // 从右到左
+        for (int i = n - 1; i >= 0; --i) {
+            switch (s[i]) {
+            case '(':
+                ++left;
+                break;
+            case ')':
+                ++right;
+            }
+            if (left == right)
+                ans = max(ans, left * 2);
+            else if (left > right)
+                right = left = 0;
+        }
+        return ans;
+    }
+};
+```
 
 ## 其他
 
