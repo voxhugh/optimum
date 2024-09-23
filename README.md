@@ -341,22 +341,6 @@ public:
 
 ## 数组
 
-### 最大子数组和
-
-```C++
-class Solution {
-public:
-    int maxSubArray(vector<int>& nums) {
-        int seq = 0, ans = nums[0];
-        for (const int& x : nums) {
-            seq = max(seq + x, x);
-            ans = max(ans, seq);
-        }
-        return ans;
-    }
-};
-```
-
 ### 合并区间
 
 ```C++
@@ -2276,194 +2260,20 @@ public:
 
 ## 动态规划
 
-### 爬楼梯
-
-```C++
-class Solution {
-public:
-    int climbStairs(int n) {
-        // f(0) = 1, f(1) = 1
-        int p = 0, q = 0, r = 1;
-        // 滚动数组
-        for (int i = 1; i <= n; ++i) {
-            p = q;
-            q = r;
-            r = p + q;
-        }
-        return r;
-    }
-};
-```
-
 ### 杨辉三角
 
 ```C++
 class Solution {
 public:
     vector<vector<int>> generate(int numRows) {
-        vector<vector<int>> ans(numRows);
+        vector<vector<int>> matrix(numRows);
         for (int i = 0; i < numRows; ++i) {
-            ans[i].resize(i + 1);
-            ans[i][0] = ans[i][i] = 1;
+            matrix[i].resize(i + 1);
+            matrix[i][0] = matrix[i][i] = 1;
             for (int j = 1; j < i; ++j)
-                ans[i][j] = ans[i - 1][j - 1] + ans[i - 1][j];
+                matrix[i][j] = matrix[i - 1][j - 1] + matrix[i - 1][j];
         }
-        return ans;
-    }
-};
-```
-
-### 打家劫舍
-
-```C++
-class Solution {
-public:
-    int rob(vector<int>& nums) {
-        int n = nums.size();
-        if (n == 1)     return nums[0];
-        // dp[i] = max(dp[i-1],dp[i-2]+nums[i])
-        int p = nums[0], q = max(nums[0], nums[1]);
-        for (int i = 2; i < n; ++i) {
-            int temp = q;
-            q = max(p + nums[i], q);
-            p = temp;
-        }
-        return q;
-    }
-};
-```
-
-### 零钱兑换
-
-```C++
-class Solution {
-public:
-    int coinChange(vector<int>& coins, int amount) {
-        int n = coins.size();
-        vector<int> F(amount + 1, amount + 1);
-        // 对依次增大的总金额枚举每种硬币面额，构建硬币方案 F(i) = F(i-cj) + 1
-        F[0] = 0;
-        for (int i = 1; i <= amount; ++i)
-            for (int j = 0; j < n; ++j)
-                if (i >= coins[j])
-                    F[i] = min(F[i], F[i - coins[j]] + 1);
-        return F[amount] > amount ? -1 : F[amount];
-    }
-};
-```
-
-### 完全平方数
-
-```C++
-class Solution {
-public:
-    int numSquares(int n) {
-        vector<int> F(n + 1);
-        for (int i = 1; i <= n; ++i) {
-            int least = n;
-            for (int j = 1; j * j <= i; ++j)
-                least = min(least, F[i - j * j]);
-            F[i] = least + 1;
-        }
-        return F[n];
-    }
-};
-```
-
-### 单词拆分
-
-```C++
-class Solution {
-public:
-    bool wordBreak(string s, vector<string>& wordDict) {
-        unordered_set<string> dic;
-        for (const string& x : wordDict)
-            dic.emplace(x);
-
-        int n = s.size();
-        vector<bool> dp(n + 1);
-        dp[0] = true;
-        // F(i) = F(j)&&check(j...i-1)
-        for (int i = 1; i <= n; ++i) {
-            for (int j = 0; j < i; ++j)
-                if (dp[j] && dic.count(s.substr(j, i - j))) {
-                    dp[i] = true;
-                    break;
-                }
-        }
-        return dp[n];
-    }
-};
-```
-
-### 最长递增子序列
-
-```C++
-class Solution {
-public:
-    int lengthOfLIS(vector<int>& nums) {
-        int n = nums.size();
-        vector<int> F(n, 1);
-
-        // F(i) = F(j)+1;
-        for (int i = 1; i < n; ++i)
-            for (int j = 0; j < i; ++j)
-                if (nums[j] < nums[i])
-                    F[i] = max(F[i], F[j] + 1);
-        return *max_element(F.begin(), F.end());
-    }
-};
-```
-
-### 乘积最大子数组
-
-```C++
-
-class Solution {
-public:
-    int maxProduct(vector<int>& nums) {
-        int minF = nums[0], maxF = nums[0], ans = nums[0], n = nums.size();
-        // F(i) = max(mx*nums[i],mn*nums[i],nums[i])
-        for (int i = 1; i < n; ++i) {
-            int mx = maxF;
-            int mn = minF;
-            maxF = max(mx * nums[i], max(nums[i], mn * nums[i]));
-            minF = min(mn * nums[i], min(nums[i], mx * nums[i]));
-            ans = max(ans, maxF);
-        }
-        return ans;
-    }
-};
-```
-
-### 分割等和子集
-
-```C++
-class Solution {
-public:
-    bool canPartition(vector<int>& nums) {
-
-        int n = nums.size();
-        if (n < 2)      return false;
-
-        int sum = 0, mx = nums[0], target = 0;
-        for (const int& x : nums) {
-            sum += x;
-            mx = max(mx, x);
-        }
-        target = sum / 2;
-        if (sum & 1 || target < mx)
-            return false;
-        // dp[i,j]表示前i个元素中是否存在若干个之和等于j
-        vector<int> dp(target + 1);
-        dp[0] = true;
-        for (int i = 0; i < n; ++i) {
-            int num = nums[i];
-            for (int j = target; j >= num; --j) {
-                dp[j] |= dp[j - num];
-            }
-        }
-        return dp[target];
+        return matrix;
     }
 };
 ```
@@ -2475,7 +2285,6 @@ class Solution {
 public:
     int longestValidParentheses(string s) {
         int n = s.size(), left = 0, right = 0, ans = 0;
-        // 从左到右
         for (int i = 0; i < n; ++i) {
             switch (s[i]) {
             case '(':
@@ -2485,12 +2294,11 @@ public:
                 ++right;
             }
             if (left == right)
-                ans = max(ans, right * 2);
+                ans = max(ans, 2 * left);
             else if (right > left)
-                right = left = 0;
+                left = right = 0;
         }
-        right = left = 0;
-        // 从右到左
+        left = right = 0;
         for (int i = n - 1; i >= 0; --i) {
             switch (s[i]) {
             case '(':
@@ -2500,11 +2308,346 @@ public:
                 ++right;
             }
             if (left == right)
-                ans = max(ans, left * 2);
-            else if (left > right)
-                right = left = 0;
+                ans = max(ans, 2 * right);
+            else if (right < left)
+                left = right = 0;
         }
         return ans;
+    }
+};
+```
+
+### 最长回文子串
+
+```C++
+class Solution {
+    pair<int, int> extension(string& s, int left, int right, int& size) {
+        while (left >= 0 && right < size && s[left] == s[right]) {
+            --left;
+            ++right;
+        }
+        return {left + 1, right - 1};
+    }
+
+public:
+    string longestPalindrome(string s) {
+        int n = s.size();
+        if (n < 2)
+            return s;
+        int bg = 0, ed = 0;
+        // 枚举回文串的中心
+        for (int i = 0; i < n; ++i) {
+            auto [L1, R1] = extension(s, i, i, n);
+            auto [L2, R2] = extension(s, i, i + 1, n);
+            if (R1 - L1 > ed - bg) {
+                bg = L1;
+                ed = R1;
+            }
+            if (R2 - L2 > ed - bg) {
+                bg = L2;
+                ed = R2;
+            }
+        }
+        return s.substr(bg, ed - bg + 1);
+    }
+};
+```
+
+------
+
+### 爬楼梯
+
+```C++
+class Solution {
+public:
+    int climbStairs(int n) {
+        // F[i] = F[i-1]+F[i-2]
+        int p = 0, q = 1, r = 1;
+        for (int i = 2; i <= n; ++i) {
+            p = q;
+            q = r;
+            r = p + q;
+        }
+        return r;
+    }
+};
+```
+
+### 不同路径
+
+```C++
+class Solution {
+public:
+    int uniquePaths(int m, int n) {
+        // F[i,j] = F[i,j-1] + F[i-1,j]    true
+        vector<int> F(n, 1);
+        // F[0,0] = 1
+        for (int i = 1; i < m; ++i)
+            for (int j = 1; j < n; ++j)
+                F[j] += F[j - 1];
+        return F[n - 1];
+        /*
+            排列组合 C(m+n-2,m-1) = n*...(m+n-2)/(m-1)!
+                long ans = 1;
+                for (int x = n, y = 1; y < m; ++x, ++y)
+                    ans = ans * x / y;
+                return ans;
+        */
+    }
+};
+```
+
+------
+
+### 打家劫舍
+
+```C++
+class Solution {
+public:
+    int rob(vector<int>& nums) {
+        // F[i] = max(F[i-1],F[i-2]+nums[i])
+        int n = nums.size();
+        if (n == 1)
+            return nums[0];
+        int p = nums[0], q = max(nums[0], nums[1]);
+        for (int i = 2; i < n; ++i) {
+            int temp = q;
+            q = max(q, p + nums[i]);
+            p = temp;
+        }
+        return q;
+    }
+};
+```
+
+### 最小路径和
+
+```C++
+class Solution {
+public:
+    int minPathSum(vector<vector<int>>& grid) {
+        // F[i,j] = nums[i] + min(F[i,j-1],F[i-1,j])    true
+        int m = grid.size(), n = grid[0].size();
+        vector<int> F(n);
+        F[0] = grid[0][0];
+        for (int j = 1; j < n; ++j)
+            F[j] = F[j - 1] + grid[0][j];
+        for (int i = 1; i < m; ++i) {
+            F[0] += grid[i][0];
+            for (int j = 1; j < n; ++j)
+                F[j] = min(F[j - 1], F[j]) + grid[i][j];
+        }
+        return F[n - 1];
+    }
+};
+```
+
+------
+
+### 最大子数组和
+
+```C++
+class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        // F[i] = max(nums[i],F[i-1]+nums[i])   true
+        int F = 0, ans = nums[0];
+        for (const auto& x : nums) {
+            F = max(x, F + x);
+            ans = max(ans, F);
+        }
+        return ans;
+    }
+};
+```
+
+### 最长递增子序列
+
+```C++
+class Solution {
+public:
+    int lengthOfLIS(vector<int>& nums) {
+        // F[i] = 1 + max(F[j])     false
+        int n = nums.size();
+        vector<int> F(n, 1);
+        for (int i = 1; i < n; ++i)
+            for (int j = 0; j < i; ++j)
+                if (nums[i] > nums[j])
+                    F[i] = max(F[i], F[j] + 1);
+        return *max_element(F.begin(), F.end());
+    }
+};
+```
+
+### 乘积最大子数组
+
+```C++
+class Solution {
+public:
+    int maxProduct(vector<int>& nums) {
+        // MF[i] = max(nums[i],MF[i-1]*nums[i],mF[i-1]*nums[i]);    true;
+        // mF[i] = min(nums[i],mF[i-1]*nums[i],MF[i-1]*nums[i]);
+        int n = nums.size();
+        long MF = nums[0], mF = nums[0], ans = nums[0];
+        for (int i = 1; i < n; ++i) {
+            long M = MF, m = mF;
+            MF = max((long)nums[i], max(M * nums[i], m * nums[i]));
+            mF = min((long)nums[i], min(M * nums[i], m * nums[i]));
+            ans = max(ans, MF);
+            // 防止爆int
+            if (mF < INT_MIN)
+                mF = nums[i];
+        }
+        return ans;
+    }
+};
+```
+
+------
+
+### 完全平方数 
+
+```C++
+class Solution {
+public:
+    int numSquares(int n) {
+        // F[i] = 1+min(F[i-j*j]) false
+        vector<int> F(n + 1, n);
+        F[0] = 0;
+        for (int i = 1; i <= n; ++i) {
+            for (int j = 0; j * j <= i; ++j)
+                F[i] = min(F[i], F[i - j * j]);
+            ++F[i];
+        }
+        return F[n];
+    }
+};
+```
+
+### 零钱兑换
+
+```C++
+class Solution {
+public:
+    int coinChange(vector<int>& coins, int amount) {
+        // F[i] = 1+min(F[i-cj])    false
+        int n = coins.size();
+        vector<int> F(amount + 1, amount + 1);
+        F[0] = 0;
+        for (int i = 1; i <= amount; ++i) {
+            for (int j = 0; j < n; ++j)
+                if (coins[j] <= i)
+                    F[i] = min(F[i], F[i - coins[j]]);
+            	++F[i];
+        }
+        return F[amount] > amount ? -1 : F[amount];
+    }
+};
+```
+
+### 单词拆分
+
+```C++
+class Solution {
+public:
+    bool wordBreak(string s, vector<string>& wordDict) {
+        // F[i] = F[j]&&check(j,i)  false
+        unordered_set<string> dict;
+        for (const auto& x : wordDict)
+            dict.emplace(x);
+        int n = s.size();
+        vector<bool> F(n + 1);
+        F[0] = true;
+        for (int i = 1; i <= n; ++i) {
+            for (int j = 0; j < i; ++j) {
+                if (F[j] && dict.count(s.substr(j, i - j))) {
+                    F[i] = true;
+                    break;
+                }
+            }
+        }
+        return F[n];
+    }
+};
+```
+
+------
+
+### 分割等和子集
+
+```C++
+class Solution {
+public:
+    bool canPartition(vector<int>& nums) {
+        // F[i,j] = F[i-1,j] || F[i-1,j-nums[i]]  true    j>=nums[i]
+        // F[i,j] = F[i-1,j]    j<nums[i]
+        int sum = accumulate(nums.begin(), nums.end(), 0);
+        int M = *max_element(nums.begin(), nums.end());
+        if (sum & 1 || M > sum / 2)
+            return false;
+        // F[0,0] = true 不选元素则恒为零
+        int n = nums.size(), tar = sum / 2;
+        vector<int> F(tar + 1);
+        F[0] = true;
+        for (int i = 0; i < n; ++i) {
+            int num = nums[i];
+            for (int j = tar; j >= num; --j)
+                F[j] |= F[j - num];
+        }
+        return F[tar];
+    }
+};
+```
+
+### 最长公共子序列
+
+```C++
+class Solution {
+public:
+    int longestCommonSubsequence(string text1, string text2) {
+        // F[i,j] = max(F[i,j-1],F[i-1,j])   s[i]!=s[j]   true
+        // F[i,j] = 1+F[i-1,j-1]   s[i]=s[j]   true
+        int s1 = text1.size(), s2 = text2.size();
+        vector<int> F(s2 + 1);
+        for (int i = 1; i <= s1; ++i) {
+            int pre = F[0];
+            for (int j = 1; j <= s2; ++j) {
+                int temp = F[j];
+                F[j] = text1[i-1] != text2[j-1] ? max(F[j-1], F[j]) : 1 + pre;
+                pre = temp;
+            }
+        }
+        return F[s2];
+    }
+};
+```
+
+### 编辑距离
+
+```C++
+class Solution {
+public:
+    int minDistance(string word1, string word2) {
+        // F[i,j] = 1+min(F[i-1,j],F[i,j-1],F[i-1,j-1])   false
+        int s1 = word1.size(), s2 = word2.size();
+        if (s1 * s2 == 0)   return s1 + s2;
+        
+        // 初始化边界编辑距离
+        vector<vector<int>> F(s1 + 1, vector<int>(s2 + 1));
+        for (int j = 0; j <= s2; ++j)
+            F[0][j] = j;
+
+        for (int i = 1; i <= s1; ++i) {
+            F[i][0] = i;
+            int both = F[i - 1][0];
+            for (int j = 1; j <= s2; ++j) {
+                both = F[i - 1][j - 1];
+                if (word1[i - 1] != word2[j - 1])
+                    ++both;
+                F[i][j] = min(both, 1 + min(F[i - 1][j], F[i][j - 1]));
+            }
+        }
+        return F[s1][s2];
     }
 };
 ```
